@@ -1,0 +1,80 @@
+name: Build and Release stdin-wasi
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run Test Suite
+        run: npm test
+
+      - name: Package Distribution Archive
+        run: make dist
+
+      - name: Reset Rolling Tag 'latest' to Current Tag Commit
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          gh release delete latest --cleanup-tag --yes || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+          git tag -d latest 2>/dev/null || true
+          sleep 2
+          git tag -f latest
+          git push --force origin latest
+
+      - name: Publish Versioned Release (Git Tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "stdin-wasi ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: |
+            dist/*.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Rolling Latest Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          target_commitish: ${{ github.sha }}
+          name: "stdin-wasi latest"
+          body: |
+            Latest release tracking version `${{ github.ref_name }}` (`${{ github.sha }}`).
+
+            ### 📦 Downloadable Assets:
+            - **`stdin-wasi-${{ github.ref_name }}.tgz`**: Pre-packaged zero-dependency NPM package archive ready for installation and embedding.
+          prerelease: false
+          make_latest: "legacy"
+          files: |
+            dist/*.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,43 @@
+{
+  "name": "stdin-wasi",
+  "version": "0.1.0",
+  "description": "Zero-dependency synchronous standard input (stdin) coordinator and ring buffer protocol for WebAssembly (WASI Preview 1)",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./host": "./src/host.js",
+    "./worker": "./src/worker.js",
+    "./buffer": "./src/buffer.js"
+  },
+  "scripts": {
+    "test": "node test/buffer.test.js && node test/stdin.test.js && node test/eof.test.js"
+  },
+  "files": [
+    "src",
+    "SPEC.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "author": "breeze833",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breeze833/stdin-wasi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/breeze833/stdin-wasi/issues"
+  },
+  "homepage": "https://github.com/breeze833/stdin-wasi#readme",
+  "keywords": [
+    "wasi",
+    "webassembly",
+    "stdin",
+    "atomics",
+    "sharedarraybuffer",
+    "synchronous-io",
+    "terminal",
+    "posix",
+    "worker"
+  ]
+}
